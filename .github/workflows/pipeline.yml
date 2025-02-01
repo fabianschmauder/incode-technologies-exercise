@@ -42,9 +42,9 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }} # TODO use oicd
 
-      - name: Login to Amazon ECR
+      - name: Login to Amazon ECR #ected input(s) 'aws-region', valid inputs are ['http-proxy', 'mask-password', 'registries', 'registry-type', 'skip-logout']
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v1
         with:
@@ -57,3 +57,30 @@ jobs:
       - name: Push Docker image to ECR
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  deploy-to-ecs:
+    needs: push-image
+    runs-on: ubuntu-latest
+    env:
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      ECR_REPOSITORY: incode-exercise
+      IMAGE_TAG: latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }} # TODO use oicd
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy
+        run: |
+          cd infrastructure
+          npm install
+          npm run deploy
+          
+
