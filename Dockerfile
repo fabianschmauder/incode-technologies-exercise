@@ -1,6 +1,6 @@
 FROM openjdk:22
 
-RUN groupadd -r appgroup && useradd -r -g myappgroup appuser
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 WORKDIR /app
 
