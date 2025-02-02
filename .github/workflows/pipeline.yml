@@ -20,7 +20,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: application-artifact
-          path: target/incode-exercise.jar
+          path: target/*.jar
 
   create-ecr-repo:
     runs-on: ubuntu-latest
@@ -65,7 +65,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: application-artifact
-          path: target/incode-exercise.jar
+          path: target
+      - name: list files
+        run: |
+          cd target
+          ls
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -78,7 +82,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --platform linux/arm64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
       - name: Push Docker image to ECR
         run: |
