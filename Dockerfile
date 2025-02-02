@@ -10,5 +10,4 @@ RUN chown -R appuser:appgroup /app
 EXPOSE 8080
 
 USER appuser
-
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
