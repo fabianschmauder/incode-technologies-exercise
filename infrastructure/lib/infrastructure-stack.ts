@@ -6,11 +6,27 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
+
+        new dynamodb.Table(this, 'TransformationTable', {
+            tableName: 'transformed-data',
+            partitionKey: {
+                name: 'requestId',
+                type: dynamodb.AttributeType.STRING
+            },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+
         const vpc = new Vpc(this, "IncodeVpc", {maxAzs: 3});
+
+        vpc.addGatewayEndpoint('DynamoDbEndpoint', {
+            service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+        });
 
         const cluster = new ecs.Cluster(this, 'IncodeCluster', {
             vpc: vpc,
