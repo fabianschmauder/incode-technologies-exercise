@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: incodetechnologies-excercise
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+dynamodb:
+  region: eu-central-1
+  transformed-table-name: transformed-data
