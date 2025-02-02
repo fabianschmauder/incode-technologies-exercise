@@ -22,8 +22,35 @@ jobs:
           name: application-artifact
           path: target/incode-exercise.jar
 
-  push-image:
+  create-ecr-repo:
     needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      ECR_REPOSITORY: incode-exercise
+      IMAGE_TAG: latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy
+        run: |
+          cd ecr-infrastructure
+          npm install
+          npm run deploy
+
+  push-image:
+    needs: create-ecr-repo
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -44,12 +71,11 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
-          oidc-provider: token.actions.githubusercontent.com
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
         run: |
@@ -58,34 +84,6 @@ jobs:
       - name: Push Docker image to ECR
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-  create-ecr-repo:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    env:
-      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-      ECR_REPOSITORY: incode-exercise
-      IMAGE_TAG: latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
-          oidc-provider: token.actions.githubusercontent.com
-          aws-region: ${{ secrets.AWS_REGION }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Deploy
-        run: |
-          cd ecr-infrastructure
-          npm install
-          npm run deploy
 
   deploy-to-ecs:
     needs: push-image
@@ -104,7 +102,6 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
-          oidc-provider: token.actions.githubusercontent.com
           aws-region: ${{ secrets.AWS_REGION }}
       - uses: actions/setup-node@v4
         with:
