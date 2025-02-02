@@ -5,6 +5,7 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
+import * as logs from 'aws-cdk-lib/aws-logs';
 
 export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -24,13 +25,17 @@ export class InfrastructureStack extends cdk.Stack {
 
         const repository = ecr.Repository.fromRepositoryName(this, 'IncodeExerciseRepo', 'incode-exercise');
 
-        let service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'IncodeExerciseService', {
+        const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'IncodeExerciseService', {
             cluster,
             memoryLimitMiB: 512,
             desiredCount: 1,
             taskImageOptions: {
                 image: ecs.ContainerImage.fromEcrRepository(repository, 'latest'),
                 containerPort: 8080,
+                logDriver: ecs.LogDrivers.awsLogs({
+                    streamPrefix: 'IncodeExerciseService',
+                    logRetention: logs.RetentionDays.ONE_WEEK,
+                }),
             },
             publicLoadBalancer: true,
         });
