@@ -7,12 +7,13 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        new dynamodb.Table(this, 'TransformationTable', {
+        const table = new dynamodb.Table(this, 'TransformationTable', {
             tableName: 'transformed-data',
             partitionKey: {
                 name: 'requestId',
@@ -41,13 +42,25 @@ export class InfrastructureStack extends cdk.Stack {
 
         const repository = ecr.Repository.fromRepositoryName(this, 'IncodeExerciseRepo', 'incode-exercise');
 
+        const serviceRole = new iam.Role(this, 'IncodeExerciseServiceRole', {
+            assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+        });
+
+        serviceRole.addToPolicy(new iam.PolicyStatement({
+            actions: ['dynamodb:PutItem'],
+            resources: [table.tableArn],
+            effect: iam.Effect.ALLOW,
+        }));
+
+        const imageTag = this.node.tryGetContext("IMAGE_TAG") || "latest";
         const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'IncodeExerciseService', {
             cluster,
             memoryLimitMiB: 512,
             desiredCount: 1,
             taskImageOptions: {
-                image: ecs.ContainerImage.fromEcrRepository(repository, 'latest'),
+                image: ecs.ContainerImage.fromEcrRepository(repository, imageTag),
                 containerPort: 8080,
+                taskRole: serviceRole,
                 logDriver: ecs.LogDrivers.awsLogs({
                     streamPrefix: 'IncodeExerciseService',
                     logRetention: logs.RetentionDays.ONE_WEEK,
