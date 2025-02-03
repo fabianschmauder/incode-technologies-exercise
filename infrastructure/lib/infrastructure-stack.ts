@@ -56,6 +56,7 @@ export class InfrastructureStack extends cdk.Stack {
         const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'IncodeExerciseService', {
             cluster,
             memoryLimitMiB: 512,
+            cpu: 256,
             desiredCount: 2,
             taskImageOptions: {
                 image: ecs.ContainerImage.fromEcrRepository(repository, imageTag),
@@ -68,6 +69,7 @@ export class InfrastructureStack extends cdk.Stack {
             },
             publicLoadBalancer: true,
         });
+
         service.targetGroup.healthCheck = {
             path: '/actuator/health'
         }

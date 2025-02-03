@@ -119,6 +119,8 @@ jobs:
       - name: Fetch Load Balancer URL from CDK Outputs
         id: set-url
         run: |
+          cd infrastructure
+          npm install
           echo "url=$(npm run get-lb-url)" >> $GITHUB_OUTPUT
 
   run-smoke-test:
