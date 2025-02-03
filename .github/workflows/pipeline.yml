@@ -92,8 +92,6 @@ jobs:
   deploy-to-ecs:
     needs: push-image
     runs-on: ubuntu-latest
-    outputs:
-      LOAD_BALANCER_URL: ${{ steps.set-url.outputs.url }}
     permissions:
       id-token: write
       contents: read
@@ -108,6 +106,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
           aws-region: ${{ secrets.AWS_REGION }}
+          mask-aws-account-id: no
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -116,12 +115,11 @@ jobs:
           cd infrastructure
           npm install
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7) npm run deploy
-      - name: Fetch Load Balancer URL from CDK Outputs
-        id: set-url
-        run: |
-          cd infrastructure
-          npm install
-          echo "url=$(npm run get-lb-url)" >> $GITHUB_OUTPUT
+      - name: Upload Stack Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: stack-output
+          path: infrastructure/outputs.json
 
   run-smoke-test:
     needs: deploy-to-ecs
@@ -129,11 +127,20 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: stack-output
+          path: stack-info
+      - name: Install jq
+        run: sudo apt-get install -y jq
       - name: Smoke test
         run: |
-          echo "Testing against: ${{ needs.deploy-to-ecs.outputs.LOAD_BALANCER_URL }}"
+          jq -r '."InfrastructureStack"."LoadBalancerURL"' stack-info/outputs.json
+          LB_URL=$(jq -r '."InfrastructureStack"."LoadBalancerURL"' stack-info/outputs.json)
+          echo "Testing against: $LB_URL"
           
-          RESPONSE=$(curl -s -X POST "${{ needs.deploy-to-ecs.outputs.LOAD_BALANCER_URL }}/transform" \
+          RESPONSE=$(curl -s -X POST "$LB_URL/transform" \
             -H "Content-Type: application/json" \
             -d '{"value": "some -42kg", "transformations": [{ "operator": "REMOVE_REGEX", "regex": "-?\\d+"}]}')
 
