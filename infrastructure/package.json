@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "cdk": "cdk",
     "deploy": "cdk bootstrap && cdk deploy --require-approval never",
-    "destroy": "cdk bootstrap && cdk destroy --require-approval never"
+    "destroy": "cdk bootstrap && cdk destroy -f"
   },
   "devDependencies": {
     "@types/node": "22.7.9",

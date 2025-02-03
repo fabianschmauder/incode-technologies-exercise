@@ -114,5 +114,28 @@ jobs:
           cd infrastructure
           npm install
           npm run deploy
-          
+      - name: Fetch Load Balancer URL from CDK Outputs
+        run: |
+          echo "LOAD_BALANCER_URL=$(cdk output InfrastructureStack.LoadBalancerURL)" >> $GITHUB_ENV
 
+  run-smoke-test:
+    needs: deploy-to-ecs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Smoke test
+        run: |
+          echo "Testing against: $LOAD_BALANCER_URL"
+          
+          RESPONSE=$(curl -s -X POST "$LOAD_BALANCER_URL/transform" \
+            -H "Content-Type: application/json" \
+            -d '{"value": "some -42kg", "transformations": [{ "operator": "REMOVE_REGEX", "regex": "-?\\d+"}]}')
+
+          echo "Response Code: $RESPONSE"
+          if echo "$RESPONSE" | grep -q "some kg"; then
+            echo "Success!"
+          else
+            echo "not found"
+            exit 1
+          fi

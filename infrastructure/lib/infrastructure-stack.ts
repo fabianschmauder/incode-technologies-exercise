@@ -58,5 +58,9 @@ export class InfrastructureStack extends cdk.Stack {
         service.targetGroup.healthCheck = {
             path: '/actuator/health'
         }
+
+        new cdk.CfnOutput(this, 'LoadBalancerURL', {
+            value: `http://${service.loadBalancer.loadBalancerDnsName}`,
+        });
     }
 }
