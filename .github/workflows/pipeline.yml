@@ -119,7 +119,7 @@ jobs:
       - name: Fetch Load Balancer URL from CDK Outputs
         id: set-url
         run: |
-          echo "url=$(cdk output InfrastructureStack.LoadBalancerURL)" >> $GITHUB_OUTPUT
+          echo "url=$(npm run get-lb-url)" >> $GITHUB_OUTPUT
 
   run-smoke-test:
     needs: deploy-to-ecs

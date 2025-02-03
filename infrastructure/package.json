@@ -8,8 +8,9 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "deploy": "cdk bootstrap && cdk deploy --require-approval never -c IMAGE_TAG=$IMAGE_TAG",
-    "destroy": "cdk bootstrap && cdk destroy -f"
+    "deploy": "cdk bootstrap && cdk deploy --require-approval never -c IMAGE_TAG=$IMAGE_TAG --force",
+    "destroy": "cdk bootstrap && cdk destroy -f",
+    "get-lb-url": "cdk output InfrastructureStack.LoadBalancerURL"
   },
   "devDependencies": {
     "@types/node": "22.7.9",

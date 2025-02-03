@@ -35,7 +35,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         cluster.addCapacity('BaseAutoScalingGroup', {
             instanceType: new ec2.InstanceType('t2.micro'),
-            minCapacity: 1,
+            minCapacity: 2,
             maxCapacity: 3,
         });
 
@@ -56,7 +56,7 @@ export class InfrastructureStack extends cdk.Stack {
         const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'IncodeExerciseService', {
             cluster,
             memoryLimitMiB: 512,
-            desiredCount: 1,
+            desiredCount: 2,
             taskImageOptions: {
                 image: ecs.ContainerImage.fromEcrRepository(repository, imageTag),
                 containerPort: 8080,
