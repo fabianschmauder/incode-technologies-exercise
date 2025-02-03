@@ -57,7 +57,6 @@ jobs:
     env:
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
       ECR_REPOSITORY: incode-exercise
-      IMAGE_TAG: latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -82,6 +81,8 @@ jobs:
 
       - name: Build Docker image
         run: |
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
       - name: Push Docker image to ECR
@@ -97,7 +98,6 @@ jobs:
     env:
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
       ECR_REPOSITORY: incode-exercise
-      IMAGE_TAG: latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -113,7 +113,7 @@ jobs:
         run: |
           cd infrastructure
           npm install
-          npm run deploy
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7) npm run deploy
       - name: Fetch Load Balancer URL from CDK Outputs
         run: |
           echo "LOAD_BALANCER_URL=$(cdk output InfrastructureStack.LoadBalancerURL)" >> $GITHUB_ENV
