@@ -1,8 +1,8 @@
 package de.fabianschmauder.incode.technologies.exercise.controller.dto
 
-import de.fabianschmauder.incode.technologies.exercise.data.transform.Transform
+import de.fabianschmauder.incode.technologies.exercise.data.transform.Transformation
 
 data class TransformDataDto(
     val value: String? = null,
-    val transformer: List<Transform>? = listOf()
+    val transformer: List<Transformation>? = listOf()
 )
