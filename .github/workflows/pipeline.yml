@@ -92,6 +92,8 @@ jobs:
   deploy-to-ecs:
     needs: push-image
     runs-on: ubuntu-latest
+    outputs:
+      LOAD_BALANCER_URL: ${{ steps.set-url.outputs.url }}
     permissions:
       id-token: write
       contents: read
@@ -115,8 +117,9 @@ jobs:
           npm install
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7) npm run deploy
       - name: Fetch Load Balancer URL from CDK Outputs
+        id: set-url
         run: |
-          echo "LOAD_BALANCER_URL=$(cdk output InfrastructureStack.LoadBalancerURL)" >> $GITHUB_ENV
+          echo "url=$(cdk output InfrastructureStack.LoadBalancerURL)" >> $GITHUB_OUTPUT
 
   run-smoke-test:
     needs: deploy-to-ecs
@@ -126,9 +129,9 @@ jobs:
         uses: actions/checkout@v3
       - name: Smoke test
         run: |
-          echo "Testing against: $LOAD_BALANCER_URL"
+          echo "Testing against: ${{ needs.deploy-to-ecs.outputs.LOAD_BALANCER_URL }}"
           
-          RESPONSE=$(curl -s -X POST "$LOAD_BALANCER_URL/transform" \
+          RESPONSE=$(curl -s -X POST "${{ needs.deploy-to-ecs.outputs.LOAD_BALANCER_URL }}/transform" \
             -H "Content-Type: application/json" \
             -d '{"value": "some -42kg", "transformations": [{ "operator": "REMOVE_REGEX", "regex": "-?\\d+"}]}')
 
