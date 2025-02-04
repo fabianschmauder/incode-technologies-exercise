@@ -24,7 +24,7 @@ class TransformController(
 ) {
 
     fun validateRequestDto(data: TransformDataDto) {
-        for (transformation in data.transformer.orEmpty()) {
+        for (transformation in data.transformations.orEmpty()) {
             when (transformation.operator) {
                 TransformOperator.REMOVE_REGEX -> {
                     try {
@@ -45,7 +45,7 @@ class TransformController(
         return transformDataService.transform(
             idUtils.generateId(),
             data.value.orEmpty(),
-            data.transformer.orEmpty()
+            data.transformations.orEmpty()
         )
     }
 }

@@ -4,5 +4,5 @@ import de.fabianschmauder.incode.technologies.exercise.data.transform.Transforma
 
 data class TransformDataDto(
     val value: String? = null,
-    val transformer: List<Transformation>? = listOf()
+    val transformations: List<Transformation>? = listOf()
 )

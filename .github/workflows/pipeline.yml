@@ -144,7 +144,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"value": "some -42kg", "transformations": [{ "operator": "REMOVE_REGEX", "regex": "-?\\d+"}]}')
 
-          echo "Response Code: $RESPONSE"
+          echo "Response: $RESPONSE"
           if echo "$RESPONSE" | grep -q "some kg"; then
             echo "Success!"
           else

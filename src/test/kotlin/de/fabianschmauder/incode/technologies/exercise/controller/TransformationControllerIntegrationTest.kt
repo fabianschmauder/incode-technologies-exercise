@@ -23,7 +23,7 @@ class TransformationControllerIntegrationTest : IntegrationTest() {
 
         val transformationData = TransformDataDto(
             value = "some -42 20 data",
-            transformer = listOf(
+            transformations = listOf(
                 Transformation(
                     operator = TransformOperator.REMOVE_REGEX,
                     regex = "-?\\d+"
@@ -81,7 +81,7 @@ class TransformationControllerIntegrationTest : IntegrationTest() {
 
         val transformationData = TransformDataDto(
             value = "some aa data",
-            transformer = listOf(
+            transformations = listOf(
                 Transformation(
                     operator = TransformOperator.REMOVE_REGEX,
                     regex = "a**"
